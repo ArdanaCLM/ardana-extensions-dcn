@@ -1,0 +1,134 @@
+#
+# (c) Copyright 2016 Hewlett Packard Enterprise Development LP
+# (c) Copyright 2017 SUSE LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+#
+---
+
+  product:
+    version: 2
+
+  configuration-data:
+    - name:  DCN-CONFIG-CP1
+      services:
+        - dcn
+      data:
+        dns_domain_name: example.com
+        vsd_host_name: vsd4.example.com
+#
+#  This user OSadmin needs to be created in the VSD. The OSadmin is a
+#  user in VSD's CMS group.
+        vsd_user: OSadmin
+        vsd_passwd: OSadmin
+
+#  When vsd_cms_id is an empty string or out-of-date, the VSD will be
+#  assigning a new CMS ID for the neutron-server. If vsd_cms_id value is
+#  current, then the VSD uses that value.
+        vsd_cms_id: ''
+        vsc_mgmt_net: MANAGEMENT
+        vsc_data_net: GUEST
+        vsc_image_name: vsc_singledisk
+        vsc_user_name: admin
+        vsc_user_pass: admin
+#
+#  Vsc_active_ip is the IP address a VRS uses to communicate with the VSC.
+#  Set the VSC active address to that assigned by the CP.
+#  For the network associated with the parameter "dcn-vsc-data", in this
+#  sample input model, it is "GUEST-NET". And it will be an address in the
+#  10.1.1.0/24 network.
+#
+#  For example, if the configuration processor generated the following
+#  net_info.yml file:
+#
+#    service_ips:
+#        dcn-vsc:
+#        -   cluster: vschost
+#            cluster_ip: {}
+#            control_plane: control-plane-1
+#            hosts:
+#            -   hostname: ardana-cp1-vschost0001-DCN-VSC-mgmt
+#                ip_address: 192.168.10.15
+#                name: ardana-cp1-vschost0001
+#            network: MANAGEMENT-NET
+#        dcn-vsc-data:
+#        -   cluster: vschost
+#            cluster_ip: {}
+#            control_plane: control-plane-1
+#            hosts:
+#            -   hostname: ardana-cp1-vschost0001-DCN-VSC-DATA-guest
+#                ip_address: 10.1.1.3
+#                name: ardana-cp1-vschost0001
+#            network: GUEST-NET
+#        vsa:
+#        -   cluster: vsa
+#            cluster_ip:
+#                hostname: ardana-cp1-vsa-VSA-BLK-mgmt
+#                ip_address: 192.168.10.7
+#            control_plane: control-plane-1
+#            hosts:
+#            -   hostname: ardana-cp1-vsa0001-VSA-BLK-mgmt
+#                ip_address: 192.168.10.2
+#                name: ardana-cp1-vsa0001
+#            -   hostname: ardana-cp1-vsa0002-VSA-BLK-mgmt
+#                ip_address: 192.168.10.8
+#                name: ardana-cp1-vsa0002
+#            -   hostname: ardana-cp1-vsa0003-VSA-BLK-mgmt
+#                ip_address: 192.168.10.14
+#                name: ardana-cp1-vsa0003
+#            network: MANAGEMENT-NET
+#
+#
+#  The value to put in "vsc_active_ip" will be 10.1.1.3.
+#
+#  in servers.yml.
+#
+        vsc_active_ip: 10.1.1.3
+#
+#   The vsc_passive_ip is the IP address of the secondary VSC.This
+#   is only used when there are 2 VSCs in the cloud. It is also an address
+#   created by the CP for the value of "vsc_data_net". In this sample input
+#   model, it is "GUEST".
+#
+#   Uncomment vsc_passive_ip if there are 2 VSCs on the cloud.
+#   Of course, set its value to the IP address of the secondary VSC.
+#       vsc_passive_ip:
+#
+#  Time we need to wait for VSC VM to come up and stabilize
+#  Seconds after we begin polling:
+        vsc_start_delay: 100
+# Seconds after which we give up and fail the play:
+        vsc_start_timeout: 200
+
+# To add static routes to the VSC, use the vsc_host_routes parameter. Each
+# vsc_host_route takes 2 values:
+#     destination: a CIDR of the target IP address
+#     nexthop: the IP address of the gateway.
+#
+# For example:
+#       vsc_host_routes:
+#         - destination: 192.168.121.0/24
+#           nexthop: 192.168.10.1
+#         - destination: 192.168.122.0/24
+#           nexthop: 192.168.11.1
+#         ...
+#         - destination: 192.168.125.0/24
+#           nexthop: 192.168.14.1
+#
+#  In this model, one of the NTP servers is in the 192.168.125.0/24 network.
+#  VSC's mgmt IP address is 192.168.10.15/24. In the data center the traffic
+#  to 192.168.125.0/24 is routed through VSC mgmt network. So an entry
+#  to route packets to 192.168.125.0/24 via 192.168.10.1 is needed.
+        vsc_host_routes:
+          - destination: 192.168.125.0/24
+            nexthop: 192.168.10.1
